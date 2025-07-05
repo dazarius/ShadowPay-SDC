@@ -1,0 +1,6 @@
+web3
+requests
+solana
+anchorpy
+solders
+httpx==0.28.1

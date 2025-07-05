@@ -1,0 +1,50 @@
+Metadata-Version: 2.4
+Name: shadowPaySDK
+Version: 0.2.0.21
+Summary: ShadowPay SDK for ERC20/ERC721 and P2P smart contract interaction
+Author: dazay(aka dazarius_)
+Author-email: your@email.com
+License: MIT
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: web3
+Requires-Dist: requests
+Requires-Dist: solana
+Requires-Dist: anchorpy
+Requires-Dist: solders
+Requires-Dist: httpx==0.28.1
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: license
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# shadowPayS
+
+```bash
+pip3 install shadowPaySDK
+```
+```example to use cheque
+
+
+
+
+
+import shadowPaySDK
+
+
+EVMcheque = shadowPaySDK.Cheque(
+    retunrn_build_tx=True
+)
+
+
+
