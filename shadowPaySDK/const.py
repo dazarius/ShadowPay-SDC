@@ -1,5 +1,5 @@
 import json
-
+from solders.pubkey import Pubkey
 __ALLOW_CHAINS__ = [
     56,  # BSC Mainnet
     97,  # BSC Testnet
@@ -553,3 +553,6 @@ LAMPORTS_PER_SOL = 1_000_000_000
 WRAPED_SOL = "So11111111111111111111111111111111111111112"
 TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 NATIVE_DECIMALS: int = 9
+PROGRAM_ID = Pubkey.from_string("CrfYLvU4FdVjkBno2rRi6u5U6nGCykpQnQKSBg3uVXTw")
+
+CONFIG_PDA=Pubkey.find_program_address([b"config"], PROGRAM_ID)

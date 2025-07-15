@@ -46,28 +46,24 @@ import httpx
 import base64
 import re
 import struct
-from shadowPaySDK.const import LAMPORTS_PER_SOL
+from shadowPaySDK.const import LAMPORTS_PER_SOL, PROGRAM_ID, CONFIG_PDA
 
-PROGRAM_ID = Pubkey.from_string("CrfYLvU4FdVjkBno2rRi6u5U6nGCykpQnQKSBg3uVXTw")
 
-CONFIG_PDA=Pubkey.find_program_address([b"config"], PROGRAM_ID)
-TRESSARY = Pubkey.from_string("FRCYiNg7BV73bHRrQKAPgFKhafqiQD7aCFn2YZ6LE5oE") 
-PROGRAM_ID_STR = "5nfYDCgBgm72XdpYFEtWX2X1JQSyZdeBH2uuBZ6ZvQfi"
 
 class SOLCheque:
         def __init__(self, rpc_url: str = "https://api.mainnet-beta.solana.com", key: Wallet = None):
             self.rpc_url = rpc_url
-            if key:
-                self.key = solders.keypair.Keypair.from_base58_string(key)
+            self.key = solders.keypair.Keypair.from_base58_string(key)
             self.provider = Client(rpc_url)
             self.WRAPED_SOL = spl_constants.WRAPPED_SOL_MINT    # wrapped SOL token mint address
             # self.idl = Idl.from_json(sol_interface.Idl)  # Load the IDL for the program
         def get(self, keypair = None):
-              pubkey = SOL.get_pubkey(KEYPAIR=solders.keypair.Keypair.from_base58_string(self.key))
+              pubkey = SOL.get_pubkey(KEYPAIR=solders.keypair.Keypair.from_base58_string(self.keystore))
 
               return pubkey
         def get_config(self):
-            config_pda, _ = Pubkey.find_program_address([b"config"], PROGRAM_ID)
+            program_id = PROGRAM_ID
+            config_pda, _ = Pubkey.find_program_address([b"config"], program_id)
 
             response = self.provider.get_account_info(config_pda)
             if response.value is None:
@@ -110,7 +106,7 @@ class SOLCheque:
                 self.rpc_url = rpc_url
                 self.provider = Client(rpc_url)
             if key:
-                self.key = solders.keypair.Keypair.from_base58_string(key)
+                self.key = key
 
         def init_cheque(self, cheque_amount, recipient: str, SPACE: int = 100):
             """
@@ -182,15 +178,14 @@ class SOLCheque:
             }
             return data
 
-        def claim_cheque(self, pda_acc: str, rent_resiver:str = None ):
+        def claim_cheque(self, pda_acc: str ):
             instruction_data = bytes([1])
             payer = self.key
             payer_pubkey = payer.pubkey()
-            if not rent_resiver:
-                    rent_resiver = payer_pubkey
-            rent_resiver = Pubkey.from_string(rent_resiver)
-            cfg = self.get_config()
-            treasury = Pubkey.from_string(cfg["treasury"])
+            cfg = self.get_config()   
+            tressary = cfg["treasury"]
+
+
             ix = Instruction(
                 program_id=PROGRAM_ID,
                 data=instruction_data,
@@ -198,7 +193,7 @@ class SOLCheque:
                     AccountMeta(pubkey=payer_pubkey, is_signer=True, is_writable=True),
                     AccountMeta(pubkey=Pubkey.from_string(pda_acc), is_signer=False, is_writable=True),
                     AccountMeta(pubkey=CONFIG_PDA[0], is_signer=False, is_writable=True),  # rent receiver
-                    AccountMeta(pubkey=treasury, is_signer=False, is_writable=True)  # rent receiver 
+                    AccountMeta(pubkey=Pubkey.from_string(tressary), is_signer=False, is_writable=True)  # treasury
                 ]
             )
 
