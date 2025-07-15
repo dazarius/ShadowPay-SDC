@@ -1,4 +1,4 @@
-# shadowPayS
+# shadowPaySdk
 
 ```bash
 pip3 install shadowPaySDK
