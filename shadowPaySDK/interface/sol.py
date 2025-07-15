@@ -7,10 +7,14 @@ import spl
 import spl.token
 import spl.token.constants
 from spl.token.instructions import get_associated_token_address, create_associated_token_account, transfer, close_account, TransferParams
+from solders.system_program import transfer as ts
+from solders.system_program import TransferParams as tsf
 from spl.token.constants import TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID
 from solana.rpc.types import TxOpts, TokenAccountOpts
 from solana.rpc.types import TxOpts
 import solders
+from solders.message import Message
+
 # from solders.pubkey import Pubkey
 # from solders.keypair import Keypair
 # from solders.signature import Signature
@@ -32,9 +36,9 @@ import re
 LAMPORTS_PER_SOL = 1_000_000_000  # 1 SOL = 1,000,000,000 lamports
 
 class SOL:
-    
     def __init__(self, rpc_url = "https://api.mainnet-beta.solana.com", KEYPAIR: Optional[Union[str, solders.keypair.Keypair]] = None,TOKEN_MINT: Optional[str] = None):
             self.rpc_url = rpc_url
+    
             self.client = AsyncClient(rpc_url)
             self.KEYPAIR = None
             self.PROGRAM_ID = TOKEN_PROGRAM_ID # Default to the SPL Token Program ID
@@ -201,6 +205,26 @@ class SOL:
         return resp.value
 
 
+    async def transfer_native(self, to:str, amount: int):
+        if not self.KEYPAIR:
+            raise ValueError("not set KEYPAIR.")
+
+        sender_pubkey = self.get_pubkey()
+        receiver_pubkey = solders.pubkey.Pubkey.from_string(to)
+        ixns = [
+            ts(tsf(
+                from_pubkey=sender_pubkey,
+                to_pubkey=receiver_pubkey,
+                lamports=int(amount * LAMPORTS_PER_SOL)
+            ))
+        ]
+        msg = Message(ixns, self.get_pubkey())
+        latest_blockhash_resp = await self.client.get_latest_blockhash()
+
+        blockhash_str = latest_blockhash_resp.value.blockhash
+        tx = Transaction([self.KEYPAIR], msg, blockhash_str)
+        resp =  await self.client.send_transaction(tx)
+        return resp.value
 
 
 
