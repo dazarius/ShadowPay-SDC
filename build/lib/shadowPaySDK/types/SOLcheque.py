@@ -46,17 +46,15 @@ import httpx
 import base64
 import re
 import struct
-from shadowPaySDK.const import LAMPORTS_PER_SOL
+from shadowPaySDK.const import LAMPORTS_PER_SOL, PROGRAM_ID, CONFIG_PDA
 
-PROGRAM_ID = Pubkey.from_string("4PYNfaoDaJR8hrmUCngrwxJHAD9vkdnFySndPYC8HgNH")
 
-CONFIG_PDA=Pubkey.find_program_address([b"config"], PROGRAM_ID)
-PROGRAM_ID_STR = "5nfYDCgBgm72XdpYFEtWX2X1JQSyZdeBH2uuBZ6ZvQfi"
 
 class SOLCheque:
         def __init__(self, rpc_url: str = "https://api.mainnet-beta.solana.com", key: Wallet = None):
             self.rpc_url = rpc_url
-            self.key = solders.keypair.Keypair.from_base58_string(key)
+            if key:
+                self.key = solders.keypair.Keypair.from_base58_string(key)
             self.provider = Client(rpc_url)
             self.WRAPED_SOL = spl_constants.WRAPPED_SOL_MINT    # wrapped SOL token mint address
             # self.idl = Idl.from_json(sol_interface.Idl)  # Load the IDL for the program
@@ -64,19 +62,53 @@ class SOLCheque:
               pubkey = SOL.get_pubkey(KEYPAIR=solders.keypair.Keypair.from_base58_string(self.keystore))
 
               return pubkey
+        def get_config(self):
+            program_id = PROGRAM_ID
+            config_pda, _ = Pubkey.find_program_address([b"config"], program_id)
+
+            response = self.provider.get_account_info(config_pda)
+            if response.value is None:
+                print("❌ Config PDA not found.")
+                return None
+
+            # 🧠 У тебя data — это list[int], его нужно превратить в bytes
+            raw = bytes(response.value.data)
+
+            if len(raw) < 89:
+                print("❌ Invalid config data length.")
+                return None
+
+            admin = Pubkey.from_bytes(raw[0:32])
+            treasury = Pubkey.from_bytes(raw[32:64])
+            fee_bps = struct.unpack("<Q", raw[64:72])[0]
+            token_in_bps = struct.unpack("<Q", raw[72:80])[0]
+            token_out_bps = struct.unpack("<Q", raw[80:88])[0]
+            initialized = bool(raw[88])
+
+            
+            return {
+                "pda": str(config_pda),
+                "admin": str(admin),
+                "treasury": str(treasury),
+                "fee_bps": fee_bps,
+                "token_in_bps": token_in_bps,
+                "token_out_bps": token_out_bps,
+                "initialized": initialized,
+            }
         def set_params(self, rpc_url = None, key = None):
             if rpc_url:
                 self.rpc_url = rpc_url
                 self.provider = Client(rpc_url)
             if key:
-                self.key = key
+                self.key = solders.keypair.Keypair.from_base58_string(key)
+        # init_cheque & claim_cheque status on 15.07.2025 work
 
-        def init_cheque(self, cheque_amount, recipient: str, SPACE: int = 100):
+        def init_cheque(self, cheque_amount, recipient: str, SPACE: int = 100, build_tx: bool = False):
             """
             Initialize a cheque withc the specified amount and recipient.
             """
-            if not self.key:
-                raise ValueError("Keypair is not set. Please set the keypair before initializing a cheque.")
+            # if not self.key:
+            #     raise ValueError("Keypair is not set. Please set the keypair before initializing a cheque.")
             CHEQUE_PDA_SIGNATURE = None
             CHEQUE_SPACE = SPACE  
             CHEQUE_RENT = self.provider.get_minimum_balance_for_rent_exemption(CHEQUE_SPACE)
@@ -100,6 +132,7 @@ class SOLCheque:
             message = Message(instructions=[ix_create], payer=pubkey)
 
             t = Transaction(message=message, from_keypairs=[payer, newAcc], recent_blockhash=recent_blockhash)
+            
             r = self.provider.send_transaction(t,opts=TxOpts())
             CHEQUE_PDA_SIGNATURE = r.value
             CHEQUE_PDA = newAccPubkey  
@@ -113,15 +146,16 @@ class SOLCheque:
 
             data = bytes([0]) + bytes(r) + struct.pack("<Q", total_lamports)
 
-            
-
+            cfg = self.get_config()
+            tresury = cfg["treasury"]
             instruction = Instruction(
                 program_id=PROGRAM_ID,
                 data=data,  
                 accounts=[
                     AccountMeta(pubkey=pubkey, is_signer=True, is_writable=True),     # payer
                     AccountMeta(pubkey=CHEQUE_PDA, is_signer=False, is_writable=True), # cheque PDA
-                    AccountMeta(pubkey=Pubkey.from_string("11111111111111111111111111111111"), is_signer=False, is_writable=False)
+                    AccountMeta(pubkey=Pubkey.from_string("11111111111111111111111111111111"), is_signer=False, is_writable=False),
+                    AccountMeta(pubkey=Pubkey.from_string(tresury), is_signer=False, is_writable=True),  # treasury
 
                 ]
             )
@@ -141,13 +175,13 @@ class SOLCheque:
             }
             return data
 
-        def claim_cheque(self, pda_acc: str, rent_resiver:str = None ):
+        def claim_cheque(self, pda_acc: str ):
             instruction_data = bytes([1])
             payer = self.key
             payer_pubkey = payer.pubkey()
-            if not rent_resiver:
-                rent_resiver = payer_pubkey
-            rent_resiver = Pubkey.from_string(rent_resiver)
+            cfg = self.get_config()   
+            tressary = cfg["treasury"]
+
 
             ix = Instruction(
                 program_id=PROGRAM_ID,
@@ -155,7 +189,8 @@ class SOLCheque:
                 accounts = [
                     AccountMeta(pubkey=payer_pubkey, is_signer=True, is_writable=True),
                     AccountMeta(pubkey=Pubkey.from_string(pda_acc), is_signer=False, is_writable=True),
-                    AccountMeta(pubkey=rent_resiver, is_signer=False, is_writable=True)  # rent receiver
+                    AccountMeta(pubkey=CONFIG_PDA[0], is_signer=False, is_writable=True),  # rent receiver
+                    AccountMeta(pubkey=Pubkey.from_string(tressary), is_signer=False, is_writable=True)  # treasury
                 ]
             )
 
@@ -168,6 +203,7 @@ class SOLCheque:
                 "pda_account": pda_acc,
             }
 
+        # init_token_cheque need fix...
 
         def init_token_cheque(self, token_mint: str, token_amount,token_decimals, recipient: str, treasury: str, CHEQUE_SPACE: int = 105):
             if not self.key:
@@ -244,3 +280,5 @@ class SOLCheque:
                 "signature": str(sig),
                 "amount": token_amount
             }
+        def claim_token_cheque(self, pda_acc: str):
+            pass

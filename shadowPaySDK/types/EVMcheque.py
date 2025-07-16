@@ -333,11 +333,17 @@ class Cheque:
         amount_out = swapDetail["amountOut"]
         erc20 = shadowPaySDK.ERC20Token(w3=self.w3)
         erc20.set_params(token_address=token_out)
-        encure_allowance = erc20.ensure_allowance(
-            private_key=private_key, 
-            spender=self.contract.address, 
-            amount=amount_out,
+        encure_allowance = erc20.allowance(
+            owner=self.w3.eth.account.from_key(private_key).address,
+            spender=self.contract.address,
         )
+        if encure_allowance < amount_out:
+            approve = erc20.approve(
+                spender=self.contract.address, 
+                amount=swapDetail["amountOut"], 
+                private_key=private_key,
+            )
+            
         estimated_gas = self.contract.functions.CashOutSwapCheque(
             Web3.to_bytes(hexstr=cheque_id)  
         ).estimate_gas({
