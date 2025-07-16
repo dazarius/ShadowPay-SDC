@@ -53,7 +53,8 @@ from shadowPaySDK.const import LAMPORTS_PER_SOL, PROGRAM_ID, CONFIG_PDA
 class SOLCheque:
         def __init__(self, rpc_url: str = "https://api.mainnet-beta.solana.com", key: Wallet = None):
             self.rpc_url = rpc_url
-            self.key = solders.keypair.Keypair.from_base58_string(key)
+            if key:
+                self.key = solders.keypair.Keypair.from_base58_string(key)
             self.provider = Client(rpc_url)
             self.WRAPED_SOL = spl_constants.WRAPPED_SOL_MINT    # wrapped SOL token mint address
             # self.idl = Idl.from_json(sol_interface.Idl)  # Load the IDL for the program
@@ -84,14 +85,7 @@ class SOLCheque:
             token_out_bps = struct.unpack("<Q", raw[80:88])[0]
             initialized = bool(raw[88])
 
-            print(f"📘 Config PDA: {config_pda}")
-            print(f"Admin: {admin}")
-            print(f"Treasury: {treasury}")
-            print(f"Fee BPS: {fee_bps}")
-            print(f"Token In BPS: {token_in_bps}")
-            print(f"Token Out BPS: {token_out_bps}")
-            print(f"Initialized: {initialized}")
-
+            
             return {
                 "pda": str(config_pda),
                 "admin": str(admin),
@@ -106,14 +100,15 @@ class SOLCheque:
                 self.rpc_url = rpc_url
                 self.provider = Client(rpc_url)
             if key:
-                self.key = key
+                self.key = solders.keypair.Keypair.from_base58_string(key)
+        # init_cheque & claim_cheque status on 15.07.2025 work
 
-        def init_cheque(self, cheque_amount, recipient: str, SPACE: int = 100):
+        def init_cheque(self, cheque_amount, recipient: str, SPACE: int = 100, build_tx: bool = False):
             """
             Initialize a cheque withc the specified amount and recipient.
             """
-            if not self.key:
-                raise ValueError("Keypair is not set. Please set the keypair before initializing a cheque.")
+            # if not self.key:
+            #     raise ValueError("Keypair is not set. Please set the keypair before initializing a cheque.")
             CHEQUE_PDA_SIGNATURE = None
             CHEQUE_SPACE = SPACE  
             CHEQUE_RENT = self.provider.get_minimum_balance_for_rent_exemption(CHEQUE_SPACE)
@@ -137,6 +132,7 @@ class SOLCheque:
             message = Message(instructions=[ix_create], payer=pubkey)
 
             t = Transaction(message=message, from_keypairs=[payer, newAcc], recent_blockhash=recent_blockhash)
+            
             r = self.provider.send_transaction(t,opts=TxOpts())
             CHEQUE_PDA_SIGNATURE = r.value
             CHEQUE_PDA = newAccPubkey  
@@ -150,15 +146,16 @@ class SOLCheque:
 
             data = bytes([0]) + bytes(r) + struct.pack("<Q", total_lamports)
 
-            
-
+            cfg = self.get_config()
+            tresury = cfg["treasury"]
             instruction = Instruction(
                 program_id=PROGRAM_ID,
                 data=data,  
                 accounts=[
                     AccountMeta(pubkey=pubkey, is_signer=True, is_writable=True),     # payer
                     AccountMeta(pubkey=CHEQUE_PDA, is_signer=False, is_writable=True), # cheque PDA
-                    AccountMeta(pubkey=Pubkey.from_string("11111111111111111111111111111111"), is_signer=False, is_writable=False)
+                    AccountMeta(pubkey=Pubkey.from_string("11111111111111111111111111111111"), is_signer=False, is_writable=False),
+                    AccountMeta(pubkey=Pubkey.from_string(tresury), is_signer=False, is_writable=True),  # treasury
 
                 ]
             )
@@ -206,6 +203,7 @@ class SOLCheque:
                 "pda_account": pda_acc,
             }
 
+        # init_token_cheque need fix...
 
         def init_token_cheque(self, token_mint: str, token_amount,token_decimals, recipient: str, treasury: str, CHEQUE_SPACE: int = 105):
             if not self.key:
@@ -282,3 +280,5 @@ class SOLCheque:
                 "signature": str(sig),
                 "amount": token_amount
             }
+        def claim_token_cheque(self, pda_acc: str):
+            pass
