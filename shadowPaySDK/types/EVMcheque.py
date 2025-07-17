@@ -54,7 +54,14 @@ class Cheque:
             self.contract = contract
             return contract
         raise ValueError(f"Chain {chain_id} is not supported. Supported chains are: {list(__SHADOWPAY_CONTRACT_ADDRESS__ERC20__.keys())}")    
-        
+    async def get_address(self):
+        if self.address:
+            return self.address
+        elif self.w3:
+            return self.w3.eth.default_account
+        else:
+            raise ValueError("No address provided or Web3 instance is not set")
+
     def set_parameters(self,chain_id: Optional[str] = None, w3:Optional[Web3] = None, amount:Optional[int]  = None, private_key:Optional[str] = None, token:Optional[str] = None,address:Optional[str] = None):
         if  w3:
             self.w3 = w3
@@ -63,6 +70,7 @@ class Cheque:
             self.amount = amount
         if private_key:
             self.private_key = private_key
+            self.address = Web3.to_checksum_address(self.w3.eth.account.from_key(private_key).address)
         if token:
             self.token = token
         if address:
@@ -167,8 +175,8 @@ class Cheque:
             return False
         return {
             "hash": tx_hash.hex()
-        }    
-
+        }
+    
     async def InitTokenCheque(self, token_address:str, amount, reciver:str, private_key:Optional[str] = None):
         key = private_key or self.private_key
 
@@ -334,16 +342,18 @@ class Cheque:
         erc20 = shadowPaySDK.ERC20Token(w3=self.w3)
         erc20.set_params(token_address=token_out)
         encure_allowance = erc20.allowance(
-            owner=self.w3.eth.account.from_key(private_key).address,
-            spender=self.contract.address,
+            spender=self.contract.address, 
+            owner=self.address,
         )
         if encure_allowance < amount_out:
             approve = erc20.approve(
                 spender=self.contract.address, 
-                amount=swapDetail["amountOut"], 
+                amount=amount_out,
                 private_key=private_key,
+                conveted_amount=False
             )
-            
+            if not approve:
+                return False
         estimated_gas = self.contract.functions.CashOutSwapCheque(
             Web3.to_bytes(hexstr=cheque_id)  
         ).estimate_gas({
