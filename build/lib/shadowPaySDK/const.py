@@ -3,6 +3,7 @@ from solders.pubkey import Pubkey
 __ALLOW_CHAINS__ = [
     56,  # BSC Mainnet
     97,  # BSC Testnet
+    10143,
     0x1,
     0x1f984,
     0x38,
@@ -30,10 +31,61 @@ __ERC20_ABI__ = json.loads("""[
 ]""")
 
 __SHADOWPAY_CONTRACT_ADDRESS__ERC20__ = {
-    97: "0x5487C0DdCbD5465F26B446c6CAB88D8d6F7DF23b"
+    97: "0x5487C0DdCbD5465F26B446c6CAB88D8d6F7DF23b",
+    10143: "0x1d856f2eA4738d1a89E27dbfc8950a4976Db41a5"
   }
 
 __SHADOWPAY_ABI__ERC20__= json.loads("""[
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_trassary",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			}
+		],
+		"name": "ChequeClaimed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			}
+		],
+		"name": "ChequeCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			}
+		],
+		"name": "redeem",
+		"type": "event"
+	},
 	{
 		"inputs": [
 			{
@@ -74,16 +126,16 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 		"type": "function"
 	},
 	{
-		"inputs": [
+		"inputs": [],
+		"name": "FEE_DENOMINATOR",
+		"outputs": [
 			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
-		"name": "changeOwner",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -148,43 +200,6 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_treaseryAddress",
-				"type": "address"
-			}
-		],
-		"name": "setTreasery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_trassary",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			}
-		],
-		"name": "ChequeCreated",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "tokenAddrr",
 				"type": "address"
 			},
@@ -211,67 +226,14 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 		"type": "function"
 	},
 	{
-		"anonymous": false,
 		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			}
-		],
-		"name": "redeem",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_minFee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_maxFees",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_minEth",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_baseFee",
-				"type": "uint256"
-			}
-		],
-		"name": "setFees",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
 			{
 				"internalType": "address",
-				"name": "_to",
+				"name": "newOwner",
 				"type": "address"
 			}
 		],
-		"name": "withdrawAmount",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawFees",
+		"name": "changeOwner",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -279,19 +241,6 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 	{
 		"inputs": [],
 		"name": "collectedFees",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "FEE_DENOMINATOR",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -334,6 +283,11 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 				"internalType": "bytes32",
 				"name": "id",
 				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
 			}
 		],
 		"name": "getChequeInfo",
@@ -347,6 +301,11 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 				"internalType": "address payable[]",
 				"name": "to",
 				"type": "address[]"
+			},
+			{
+				"internalType": "bool",
+				"name": "claimed",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -397,6 +356,50 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 				"internalType": "uint256",
 				"name": "amountOut",
 				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "claimed",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getTokenChequeDetail",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "claimed",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -410,25 +413,6 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 				"internalType": "address",
 				"name": "",
 				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_addrr",
-				"type": "address"
-			}
-		],
-		"name": "getUserChequeCount",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -474,6 +458,78 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_minFee",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_maxFees",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_minEth",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_baseFee",
+				"type": "uint256"
+			}
+		],
+		"name": "setFees",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_TokenChequepercentage",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_SwapTokenChequepercentage",
+				"type": "uint256"
+			}
+		],
+		"name": "setTokenFees",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_treaseryAddress",
+				"type": "address"
+			}
+		],
+		"name": "setTreasery",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "swapBasicPoints",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -540,6 +596,31 @@ __SHADOWPAY_ABI__ERC20__= json.loads("""[
 		],
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "_to",
+				"type": "address"
+			}
+		],
+		"name": "withdrawAmount",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawFees",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	}
 ]""")
 
@@ -553,6 +634,6 @@ LAMPORTS_PER_SOL = 1_000_000_000
 WRAPED_SOL = "So11111111111111111111111111111111111111112"
 TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 NATIVE_DECIMALS: int = 9
-PROGRAM_ID = Pubkey.from_string("CrfYLvU4FdVjkBno2rRi6u5U6nGCykpQnQKSBg3uVXTw")
+PROGRAM_ID = Pubkey.from_string("6ZQWADxiM4Vy2ZXxJEZ7DvB8k7FctAXBWKj8z4b3FjMo")
 
 CONFIG_PDA=Pubkey.find_program_address([b"config"], PROGRAM_ID)

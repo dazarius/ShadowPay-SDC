@@ -2,7 +2,6 @@ LICENSE
 README.md
 setup.py
 shadowPaySDK/__init__.py
-shadowPaySDK/api.py
 shadowPaySDK/const.py
 shadowPaySDK.egg-info/PKG-INFO
 shadowPaySDK.egg-info/SOURCES.txt

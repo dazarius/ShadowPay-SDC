@@ -118,12 +118,7 @@ class SOL:
             
 
             return token_data
-    async def is_connected(self):
-        return await self.client.is_connected()
 
-    async def close(self):
-        await self.client.close()
-    
     async def fetch_metadata_raw(self,mint_address: str):
         METADATA_PROGRAM_ID = solders.pubkey.Pubkey.from_string("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
         mint = solders.pubkey.Pubkey.from_string(mint_address)
@@ -159,7 +154,6 @@ class SOL:
         return {
             "mint": mint_address,
             "name": name,
-            
 
         }
     async def transfer_token(self, to: str, amount: float):

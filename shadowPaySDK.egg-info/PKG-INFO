@@ -1,9 +1,9 @@
 Metadata-Version: 2.4
 Name: shadowPaySDK
-Version: 16.7.2025.1
+Version: 1.0.2
 Summary: ShadowPay SDK for ERC20/ERC721 and P2P smart contract interaction
-Author: dazay(aka dazarius_)
-Author-email: your@email.com
+Author: dazay
+Author-email: shadowpay.protocol@gmail.com
 License: MIT
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License

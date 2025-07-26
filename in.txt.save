@@ -1,0 +1,15 @@
+  let accounts_iter = &mut accounts.iter();
+ 
+
+    let claimer = next_account_info(accounts_iter)?;                // claimer 
+    let claimer_tokenIn_ata = next_account_info(accounts_iter)?;                // claimer_ata 
+    let recipient_tokenOut_ata = next_account_info(accounts_iter)?; 
+
+    let cheque_pda = next_account_info(accounts_iter)?;             // cheque_pda
+    let cheque_tokenIn_ata = next_account_info(accounts_iter)?;   // tokenIn will be transfer to claimer
+    let cheque_tokenOut_ata = next_account_info(accounts_iter)?;   // tokenOut will be transfer to swap initializator
+    
+    let token_program = next_account_info(accounts_iter)?;          // SPL token program
+    let config_account = next_account_info(accounts_iter)?;         // config
+    let treasury_account = next_account_info(accounts_iter)?;       // tresary
+    let owner = next_account_info(accounts_iter)?;       

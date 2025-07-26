@@ -43,7 +43,8 @@ class ERC20Token:
     def get_balance(self, wallet_address: str) -> float:
         self._ensure_contract()
         raw = self.contract.functions.balanceOf(Web3.to_checksum_address(wallet_address)).call()
-        return raw / (10 ** self.get_decimals())
+        return raw 
+
 
     def allowance(self, owner: str, spender: str) -> float:
         self._ensure_contract()
@@ -51,7 +52,7 @@ class ERC20Token:
             Web3.to_checksum_address(owner),
             Web3.to_checksum_address(spender)
         ).call()
-        return raw / (10 ** self.get_decimals())
+        return raw 
 
     def ensure_allowance(self, private_key: str, spender: str, amount, converted_amount: bool = False) -> Union[bool, str]:
         self._ensure_contract()
@@ -64,18 +65,17 @@ class ERC20Token:
     def transfer(self, private_key: str, to: str, amount: float) -> str:
         self._ensure_contract()
         account = self.web3.eth.account.from_key(private_key)
-        decimals = self.get_decimals()
-        value = int(amount * (10 ** decimals))
+        
         estimated_gas = self.contract.functions.transfer(
             Web3.to_checksum_address(to),
-            value
+            amount
         ).estimate_gas({
             'from': account.address,
             'gasPrice': self.web3.to_wei('5', 'gwei'),
         })
         txn = self.contract.functions.transfer(
             Web3.to_checksum_address(to),
-            value
+            amount
         ).build_transaction({
             'from': account.address,
             'nonce': self.web3.eth.get_transaction_count(account.address),
@@ -99,10 +99,6 @@ class ERC20Token:
             address = Web3.to_checksum_address(self.address)
         else:
             raise ValueError("No private key or address provided")
-        if conveted_amount:
-            decimals = self.get_decimals()
-            amount = int(amount * (10 ** decimals))
-            
         txn = self.contract.functions.approve(
             Web3.to_checksum_address(spender),
             amount
